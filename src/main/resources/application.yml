@@ -1,0 +1,33 @@
+quarkus:
+
+  datasource:
+    db-kind: h2
+    jdbc:
+      driver: org.h2.Driver
+      url: jdbc:h2:mem:labbac;DB_CLOSE_DELAY=-1;INIT=CREATE SCHEMA IF NOT EXISTS LAB_BAC
+
+  hibernate-orm:
+    log:
+      sql: true
+
+
+  # Console H2 per debug (solo in dev)
+  h2:
+    console:
+      enabled: true
+
+smallrye:
+  jwt:
+    sign:
+      issuer: https://unittestdemoapp.fugerit.org
+      key:
+        location: /security/privateKey.pem
+
+mp:
+  jwt:
+    verify:
+      issuer: https://unittestdemoapp.fugerit.org
+      publickey:
+        location: /security/publicKey.pem
+
+
