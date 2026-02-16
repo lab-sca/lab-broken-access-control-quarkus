@@ -9,11 +9,7 @@ Un laboratorio educativo completo per testare e comprendere le vulnerabilità [B
 Le vulnerabilità di tipo [Broken Access Control](https://owasp.org/Top10/2025/A01_2025-Broken_Access_Control/) sono attualmente le più diffuse secondo il progetto [OWASP](https://owasp.org/). Sono al primo posto sia nella [OWASP Top 10](https://owasp.org/Top10/) del [2021](https://owasp.org/Top10/2021/) che [2025](https://owasp.org/Top10/2025/).
 
 [![Keep a Changelog v1.1.0 badge](https://img.shields.io/badge/changelog-Keep%20a%20Changelog%20v1.1.0-%23E05735)](CHANGELOG.md)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=fugerit79_lab-broken-access-control-quarkus&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=fugerit79_lab-broken-access-control-quarkus)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=fugerit79_lab-broken-access-control-quarkus&metric=coverage)](https://sonarcloud.io/summary/new_code?id=fugerit79_lab-broken-access-control-quarkus)
 [![License: MIT](https://img.shields.io/badge/License-MIT-teal.svg)](https://opensource.org/licenses/MIT)
-[![code of conduct](https://img.shields.io/badge/conduct-Contributor%20Covenant-purple.svg)](https://github.com/fugerit-org/fj-universe/blob/main/CODE_OF_CONDUCT.md)
-[![CI workflow](https://github.com/fugerit79/lab-broken-access-control-quarkus/actions/workflows/ci.yml/badge.svg)](https://github.com/fugerit79/lab-broken-access-control-quarkus/actions/workflows/ci.yml)
 
 ## Indice
 
@@ -308,6 +304,16 @@ Dove (n) è l'id del comportamento vulnerabile introdotto, ad esempio (1).
 In totale saranno presenti 5 vulnerabilità. Ognuna farà fallire uno dei casi di test. Solo la numero (2) farà fallire 2 casi di test.
 
 > **BONUS**: C'è un path che contiene una vulnerabilità non censita negli unit test, nella soluzione sarà censita come SOLUTION: (X)
+
+Da notare che prima della risoluzione, l'esecuzione della suite di test *DocResourceSicurezzaTest* porterà a questo risultato (6 casi di test falliti)
+
+![unit test falliti](./src/docs/image/junit-tofix.png)
+
+Mentre dopo aver applicato le patch il risultato dovrebbe essere un questo
+
+![unit test riusciti](./src/docs/image/junit-fixed.png)
+
+> **NB** le immagini sono relative all' IDE [IntelliJ IDEA](https://www.jetbrains.com/idea/)
 
 Buon lavoro!
 

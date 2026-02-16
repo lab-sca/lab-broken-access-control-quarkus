@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-02-16
+
 ### Added
 
 - versione vulnerabile del progetto, basato su Quarkus 3.31.3, con vulnerabilità broken access control presenti.
