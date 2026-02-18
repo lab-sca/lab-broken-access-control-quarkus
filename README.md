@@ -4,7 +4,7 @@ Un laboratorio educativo completo per testare e comprendere le vulnerabilità [B
 
 > ⚠️ **ATTENZIONE**: Questo progetto contiene **intenzionalmente vulnerabilità di sicurezza** a scopo educativo. **NON utilizzare in produzione** e **NON esporre pubblicamente** senza aver rimosso tutte le vulnerabilità dimostrative.
 
-> 🔴 Versione vulnerabile
+> 🟢 Versione sanata (git checkout branch-vulnerable per accedere alla versione vulnerabile del progetto)
 
 Le vulnerabilità di tipo [Broken Access Control](https://owasp.org/Top10/2025/A01_2025-Broken_Access_Control/) sono attualmente le più diffuse secondo il progetto [OWASP](https://owasp.org/). Sono al primo posto sia nella [OWASP Top 10](https://owasp.org/Top10/) del [2021](https://owasp.org/Top10/2021/) che [2025](https://owasp.org/Top10/2025/).
 
@@ -228,7 +228,7 @@ Nel nostro scenario, abbiamo una base dati popolata e alcuni path disponibili.
 
 Esiste una base dati di persone (sono entità di dominio, non utenti). La tabella PEOPLE è pre-popolata con 3 soggetti, che hanno 4 proprietà principali:
 
-- Nome, Cognome, Titolo: descrivono la persona
+- Nome, Cognome, Titolo descrivono la persona
 - Ruolo minimo: rappresenta il ruolo minimo richiesto per poter accedere a quella persona
 
 | Nome       | Cognome | Titolo      | Ruolo minimo |
@@ -268,16 +268,97 @@ L'applicazione è configurata per gestire 3 ruoli e 4 path, che generano lo stes
 
 Questo laboratorio include 6 vulnerabilità reali di tipo Broken Access Control:
 
-| #   | Vulnerabilità                      | Classificazione | Endpoint                                                       | Status      |
-|-----|------------------------------------|-----------------|----------------------------------------------------------------|-------------|
-| (1) | ID Enumeration                     | ?               | `/person/find/{id}`                                            | 🔴 To Fix   |
-| (2) | Privilege Escalation (Data)        | ?               | `/doc/example.md`, `/doc/example.html`, `/doc/person/list`     | 🔴 To Fix   |
-| (3) | Privilege Escalation (Action)      | ?               | `/doc/person/delete/{id}`                                      | 🔴 To Fix   |
-| (4) | Broken Object Authorization        | ?               | `/doc/person/find/{id}`                                        | 🔴 To Fix   |
-| (5) | Missing Authentication             | ?               | `/doc/example.md`                                              | 🔴 To Fix   |
-| (X) | Hidden Vulnerability (BONUS)       | ?               | `???`                                                          | 🔴 To Fix   |
+| #   | Vulnerabilità                 | Classificazione | Endpoint                                                   | Status   |
+|-----|-------------------------------|-----------------|------------------------------------------------------------|----------|
+| (1) | ID Enumeration                | IDOR            | `/person/find/{id}`                                        | 🟢 Fixed |
+| (2) | Privilege Escalation (Data)   | BOLA            | `/doc/example.md`, `/doc/example.html`, `/doc/person/list` | 🟢 Fixed |
+| (3) | Privilege Escalation (Action) | BOLA            | `/doc/person/delete/{id}`                                  | 🟢 Fixed |
+| (4) | Broken Object Authorization   | BOLA            | `/doc/person/find/{id}`                                    | 🟢 Fixed |
+| (5) | Missing Authentication        | Access Control  | `/doc/example.md`                                          | 🟢 Fixed |
+| (X) | Hidden Vulnerability (BONUS)  | Access Control  | `/person/add` (PUT)                                        | 🟢 Fixed |
 
 > 💡 **Sfida**: La vulnerabilità (X) non è coperta dai test. Riesci a trovarla?
+
+### Descrizione delle vulnerabilità
+
+#### (1) ID Enumeration (IDOR)
+
+È possibile individuare gli identificativi delle persone esistenti distinguendo tra risposte 404 (non esiste) e 403 (non autorizzato).
+
+**Endpoint**: `/person/find/{id}`
+
+**Problema**: Risposta diversa per ID esistenti vs non esistenti
+```
+GET /person/999  → 404 Not Found (non esiste)
+GET /person/10002 → 403 Forbidden (esiste ma non autorizzato)
+```
+
+**Soluzione**: Risposta uniforme (sempre 403) per evitare enumerazione
+
+#### (2) Privilege Escalation - Visualizzazione dati
+
+L'utente riesce a vedere dati che dovrebbero essere disponibili solo per il profilo 'admin'.
+
+**Endpoint**: `/doc/example.md`, `/doc/example.html`, `/doc/person/list`
+
+**Problema**: Utenti con ruolo 'user' vedono Richard Feynman (minRole=admin)
+
+**Soluzione**: Filtrare i dati in base ai ruoli dell'utente autenticato
+
+#### (3) Privilege Escalation - Cancellazione
+
+L'utente riesce a cancellare una persona anche se non ha il ruolo 'admin'.
+
+**Endpoint**: `/doc/person/delete/{id}`
+
+**Problema**: `@RolesAllowed` include erroneamente "user"
+
+**Soluzione**: Rimuovere "user" da `@RolesAllowed`, lasciando solo "admin"
+
+#### (4) Broken Object Level Authorization
+
+L'utente riesce a vedere dati che non dovrebbero essere disponibili per il suo profilo.
+
+**Endpoint**: `/doc/person/find/{id}`
+
+**Problema**: Verifica del ruolo minimo mancante
+
+**Soluzione**: Controllare `person.getMinRole()` vs `securityIdentity.getRoles()`
+
+#### (5) Missing Authentication
+
+L'utente riesce ad accedere al documento anche se non è autenticato.
+
+**Endpoint**: `/doc/example.md`
+
+**Problema**: `@RolesAllowed` annotation mancante
+
+**Soluzione**: Aggiungere `@RolesAllowed({ "admin", "user", "guest" })`
+
+#### (x) Hidden Vulnerability (BONUS)
+
+una put senza controllo di autorizzazione è rimasta abilitata per errore.
+
+**Endpoint**: `/person/add` (PUT)
+
+**Problema**: Il metodo è utilizzabile senza autenticazione
+
+**Soluzione**: rimuoviamo totalmente il metodo addPersonPut()
+
+```java
+    @APIResponse(responseCode = "201", description = "La persona è stata creata", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AddPersonResponseDTO.class)))
+    @APIResponse(responseCode = "401", description = "Se l'autenticazione non è presente")
+    @APIResponse(responseCode = "403", description = "Se l'utente non è autorizzato per la risorsa")
+    @APIResponse(responseCode = "500", description = "In caso di errori non gestiti")
+    @Tag(name = "person")
+    @Operation(operationId = "addPersonPut", summary = "Aggiunge una persona al database (ruoli: admin)", description = "Vanno forniti i parametri, nome, cognome, titolo e ruolo minimo.")
+    @PUT
+    @Path("/person/add")
+    @Transactional
+    public Response addPersonPut(AddPersonRequestDTO request) {
+        return this.addPerson(request);
+    }
+```
 
 ---
 
@@ -313,8 +394,6 @@ Mentre dopo aver applicato le patch il risultato dovrebbe essere un questo
 
 ![unit test riusciti](./src/docs/image/junit-fixed.png)
 
-> **NB** le immagini sono relative all' IDE [IntelliJ IDEA](https://www.jetbrains.com/idea/)
-
 Buon lavoro!
 
 ## Architettura della sicurezza
@@ -338,7 +417,6 @@ User → JWT Token → Quarkus Security → Role Check → Object Authorization 
 | Swagger UI           | http://localhost:8080/q/swagger-ui/   |
 | Dev UI               | http://localhost:8080/q/dev/          |
 | Health Check         | http://localhost:8080/q/health        |
-| Metrics              | http://localhost:8080/q/metrics       |
 | OWASP Top 10 (2025)  | https://owasp.org/Top10/2025/         |
 | OWASP API Security   | https://owasp.org/API-Security/       |
 | JWT Debugger         | https://jwt.io/                       |

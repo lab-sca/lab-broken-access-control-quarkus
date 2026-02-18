@@ -20,7 +20,8 @@ public class PersonRepository implements PanacheRepository<Person> {
      * @return Lista di Person filtrate e ordinate
      */
     public List<Person> findByRolesOrderedByName(Collection<String> roles) {
-        return find("order by lastName, firstName").list();
+        // SOLUTION: (2) l'elenco dei ruoli è tra i parametri del metodo, ma non viene usato come filtro per il risultato. Modifichiamo la query per farne uso.
+        return find("minRole is null or minRole in ?1 order by lastName, firstName", roles).list();
     }
 
 }

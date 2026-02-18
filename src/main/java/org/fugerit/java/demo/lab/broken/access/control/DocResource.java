@@ -75,6 +75,8 @@ public class DocResource {
     @Produces("text/markdown")
     @Path("/example.md")
     @SecurityRequirement(name = "SecurityScheme")
+    // SOLUTION: (5) Aggiungere l'elenco dei ruoli autorizzati previsti dalle specifiche (il path era ad accesso pubblico)
+    @RolesAllowed({ "admin", "user", "guest" })
     public Response markdownExample() throws IOException {
         return Response.status(Response.Status.OK).entity(processDocument(DocConfig.TYPE_MD)).build();
     }
@@ -160,25 +162,14 @@ public class DocResource {
         return Response.status(Response.Status.CREATED).entity(response).build();
     }
 
-    @APIResponse(responseCode = "201", description = "La persona è stata creata", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AddPersonResponseDTO.class)))
-    @APIResponse(responseCode = "401", description = "Se l'autenticazione non è presente")
-    @APIResponse(responseCode = "403", description = "Se l'utente non è autorizzato per la risorsa")
-    @APIResponse(responseCode = "500", description = "In caso di errori non gestiti")
-    @Tag(name = "person")
-    @Operation(operationId = "addPersonPut", summary = "Aggiunge una persona al database (ruoli: admin)", description = "Vanno forniti i parametri, nome, cognome, titolo e ruolo minimo.")
-    @PUT
-    @Path("/person/add")
-    @Transactional
-    public Response addPersonPut(AddPersonRequestDTO request) {
-        return this.addPerson(request);
-    }
+    // SOLUTION: (X), una put senza controllo di autorizzazione è rimasta abilitata per errore, rimuoviamo totalmente il metodo addPersonPut()
 
     @APIResponse(responseCode = "200", description = "La persona è stata creata", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AddPersonResponseDTO.class)))
     @APIResponse(responseCode = "401", description = "Se l'autenticazione non è presente")
     @APIResponse(responseCode = "403", description = "Se l'utente non è autorizzato per la risorsa")
     @APIResponse(responseCode = "500", description = "In caso di errori non gestiti")
     @Tag(name = "person")
-    @Operation(operationId = "addPerson", summary = "Interroga i dati di una persona per ID (ruoli: admin, user)", description = "Sul risultato viene verificato che sia presente il ruolo minimo.")
+    @Operation(operationId = "findPerson", summary = "Interroga i dati di una persona per ID (ruoli: admin, user)", description = "Sul risultato viene verificato che sia presente il ruolo minimo.")
     @GET
     @Path("/person/find/{id}")
     @RolesAllowed({ "admin", "user" })
@@ -186,9 +177,15 @@ public class DocResource {
     public Response findPerson(@PathParam("id") Long id) {
         Person person = this.personRepository.findById(id);
         if (person == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            //SOLUTION: (1) restituiamo FORBIDDEN invece di NOT_FOUND per non rendere gli oggetti enumerabili.
+            return Response.status(Response.Status.FORBIDDEN).build();
         } else {
-            return Response.status(Response.Status.OK).entity(person.toDTO()).build();
+            // SOLUTION: (4) verifichiamo se l'utente ha il ruolo minimo richiesto per la persona richiesta. In caso negativo ritorniamo FORBIDDEN
+            if (person.getMinRole() == null || this.securityIdentity.getRoles().contains(person.getMinRole())) {
+                return Response.status(Response.Status.OK).entity(person.toDTO()).build();
+            } else {
+                return Response.status(Response.Status.FORBIDDEN).build();
+            }
         }
     }
 
@@ -201,7 +198,8 @@ public class DocResource {
     @Operation(operationId = "deletePerson", summary = "Cancella una persona per ID (ruoli: admin)", description = "Cancella un utente")
     @DELETE
     @Path("/person/delete/{id}")
-    @RolesAllowed({ "admin", "user" })
+    // SOLUTION: (3) Rimuoviamo il ruolo 'user' tra quelli autorizzati. Secondo le specifiche, la cancellazione delle persone deve essere consentita solo al ruolo 'admin'
+    @RolesAllowed({ "admin" })
     @Transactional
     public Response deletePerson(@PathParam("id") Long id) {
         Person person = this.personRepository.findById(id);
@@ -217,7 +215,7 @@ public class DocResource {
     @APIResponse(responseCode = "403", description = "Se l'utente non è autorizzato per la risorsa")
     @APIResponse(responseCode = "500", description = "In caso di errori non gestiti")
     @Tag(name = "person")
-    @Operation(operationId = "addPerson", summary = "Elenca le personi attualmente presenti (ruoli: admin, user)", description = "Il risultato viene filtrato inbase al ruolo minimo")
+    @Operation(operationId = "listPerson", summary = "Elenca le persone attualmente presenti (ruoli: admin, user)", description = "Il risultato viene filtrato in base al ruolo minimo")
     @GET
     @Path("/person/list")
     @RolesAllowed({ "admin", "user" })
