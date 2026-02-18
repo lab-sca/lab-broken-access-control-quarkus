@@ -178,7 +178,7 @@ public class DocResource {
     @APIResponse(responseCode = "403", description = "Se l'utente non è autorizzato per la risorsa")
     @APIResponse(responseCode = "500", description = "In caso di errori non gestiti")
     @Tag(name = "person")
-    @Operation(operationId = "addPerson", summary = "Interroga i dati di una persona per ID (ruoli: admin, user)", description = "Sul risultato viene verificato che sia presente il ruolo minimo.")
+    @Operation(operationId = "findPerson", summary = "Interroga i dati di una persona per ID (ruoli: admin, user)", description = "Sul risultato viene verificato che sia presente il ruolo minimo.")
     @GET
     @Path("/person/find/{id}")
     @RolesAllowed({ "admin", "user" })
@@ -217,7 +217,7 @@ public class DocResource {
     @APIResponse(responseCode = "403", description = "Se l'utente non è autorizzato per la risorsa")
     @APIResponse(responseCode = "500", description = "In caso di errori non gestiti")
     @Tag(name = "person")
-    @Operation(operationId = "addPerson", summary = "Elenca le personi attualmente presenti (ruoli: admin, user)", description = "Il risultato viene filtrato inbase al ruolo minimo")
+    @Operation(operationId = "listPerson", summary = "Elenca le personi attualmente presenti (ruoli: admin, user)", description = "Il risultato viene filtrato inbase al ruolo minimo")
     @GET
     @Path("/person/list")
     @RolesAllowed({ "admin", "user" })

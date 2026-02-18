@@ -338,7 +338,6 @@ User → JWT Token → Quarkus Security → Role Check → Object Authorization 
 | Swagger UI           | http://localhost:8080/q/swagger-ui/   |
 | Dev UI               | http://localhost:8080/q/dev/          |
 | Health Check         | http://localhost:8080/q/health        |
-| Metrics              | http://localhost:8080/q/metrics       |
 | OWASP Top 10 (2025)  | https://owasp.org/Top10/2025/         |
 | OWASP API Security   | https://owasp.org/API-Security/       |
 | JWT Debugger         | https://jwt.io/                       |
