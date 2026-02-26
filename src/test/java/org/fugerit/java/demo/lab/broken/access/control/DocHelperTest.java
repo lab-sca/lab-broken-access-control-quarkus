@@ -11,6 +11,8 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -36,7 +38,8 @@ class DocHelperTest {
             DocHelper docHelper = new DocHelper();
             // create custom data for the fremarker template 'document.ftl'
             List<People> listPeople = Arrays.asList(
-                    new People("Luthien", "Tinuviel", "Queen"), new People("Thorin", "Oakshield", "King"));
+                    new People("Luthien", "Tinuviel", "Queen", UUID.randomUUID().toString()),
+                    new People("Thorin", "Oakshield", "King", UUID.randomUUID().toString()));
 
             String chainId = "document";
             // handler id

@@ -13,6 +13,16 @@ import java.util.List;
 public class PersonRepository implements PanacheRepository<Person> {
 
     /**
+     * Cerca una persona tramite il campo UUID.
+     *
+     * @param uuid l'UUID della persona da cercare
+     * @return la {@link Person} corrispondente all'UUID fornito, o {@code null} se non trovata
+     */
+    public Person findByUuid(String uuid) {
+        return find("uuid", uuid).firstResult();
+    }
+
+    /**
      * Restituisce l'elenco delle persone ordinate per cognome e nome,
      * filtrate per MIN_ROLE (NULL oppure presente nella collection di ruoli fornita)
      *

@@ -26,6 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
@@ -124,7 +125,8 @@ public class DocResource {
                     .map(person -> new People(
                             person.getFirstName(),
                             person.getLastName(),
-                            person.getTitle()))
+                            person.getTitle(),
+                            person.getUuid()))
                     .toList();
 
             log.info("processDocument handlerId : {}", handlerId);
@@ -151,13 +153,14 @@ public class DocResource {
     @Transactional
     public Response addPerson(@Valid AddPersonRequestDTO request) {
         Person person = new Person();
+        person.setUuid(UUID.randomUUID().toString());
         person.setFirstName(request.getFirstName());
         person.setLastName(request.getLastName());
         person.setTitle(request.getTitle());
         person.setMinRole(request.getMinRole());
         person.persistAndFlush();
         AddPersonResponseDTO response = new AddPersonResponseDTO();
-        response.setId(person.getId());
+        response.setUuid(person.getUuid());
         response.setCreationDate(person.getCreationDate());
         return Response.status(Response.Status.CREATED).entity(response).build();
     }
@@ -171,11 +174,11 @@ public class DocResource {
     @Tag(name = "person")
     @Operation(operationId = "findPerson", summary = "Interroga i dati di una persona per ID (ruoli: admin, user)", description = "Sul risultato viene verificato che sia presente il ruolo minimo.")
     @GET
-    @Path("/person/find/{id}")
+    @Path("/person/find/{uuid}")
     @RolesAllowed({ "admin", "user" })
     @Transactional
-    public Response findPerson(@PathParam("id") Long id) {
-        Person person = this.personRepository.findById(id);
+    public Response findPerson(@PathParam("uuid") String uuid) {
+        Person person = this.personRepository.findByUuid(uuid);
         if (person == null) {
             //SOLUTION: (1) restituiamo FORBIDDEN invece di NOT_FOUND per non rendere gli oggetti enumerabili.
             return Response.status(Response.Status.FORBIDDEN).build();
@@ -197,12 +200,12 @@ public class DocResource {
     @Tag(name = "person")
     @Operation(operationId = "deletePerson", summary = "Cancella una persona per ID (ruoli: admin)", description = "Cancella un utente")
     @DELETE
-    @Path("/person/delete/{id}")
+    @Path("/person/delete/{uuid}")
     // SOLUTION: (3) Rimuoviamo il ruolo 'user' tra quelli autorizzati. Secondo le specifiche, la cancellazione delle persone deve essere consentita solo al ruolo 'admin'
     @RolesAllowed({ "admin" })
     @Transactional
-    public Response deletePerson(@PathParam("id") Long id) {
-        Person person = this.personRepository.findById(id);
+    public Response deletePerson(@PathParam("uuid") String uuid) {
+        Person person = this.personRepository.findByUuid(uuid);
         if (person == null) {
             return Response.status(Response.Status.FORBIDDEN).build();
         }

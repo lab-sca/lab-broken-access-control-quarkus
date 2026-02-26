@@ -22,13 +22,13 @@ import static io.restassured.RestAssured.given;
 @Slf4j
 class DocResourceSicurezzaTest {
 
-    private static final long ID_NON_ESISTE = 111; // gli id partano da 10000
+    private static final String ID_NON_ESISTE = "955b6a27-3da5-421f-a380-a86944e0c769"; // gli id partano da 10000
 
-    private static final long ID_MARGHERITA_HACK = 10000;
+    private static final String ID_MARGHERITA_HACK = "46005e2d-4faa-4c5a-8ed2-6876d63622a7";
 
-    private static final long ID_ALAN_TURING = 10001;
+    private static final String ID_ALAN_TURING = "62472b90-14a5-45b5-891e-14f9e5659680";
 
-    private static final long ID_RICHARD_FEYMAN = 10002;
+    private static final String ID_RICHARD_FEYMAN = "3ad86124-765a-4104-a2dd-e99335ff1260";
 
     private static final String EXPIRED_JWT = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJodHRwczovL3VuaXR0ZXN0ZGVtb2FwcC5mdWdlcml0Lm9yZyIsInVwbiI6IkRFTU9VU0VSIiwiZ3JvdXBzIjpbImFkbWluIiwiZ3Vlc3QiLCJ1c2VyIl0sInN1YiI6IkRFTU9VU0VSIiwiaWF0IjoxNzcxMjQ2NzE3LCJleHAiOjE3NzEyNTAzMTcsImp0aSI6Ijc1MDA3YjBlLTBmYzktNDdkMS05OTY2LTEyMmIxODNkMDZlMyJ9.FblIqZcvhCpgJzlgulOBH0nWXkYwLJv9IpCuTAArvwTTZN2sAsFiGV7bH9tnalbINmgrVfSMAWoSVG1o4WtMY5Tg_ZtIGr1JJQY5zpH584CBWZIqDo9NJkVmTB1H1aK-ZiENGjghbdpVyxdy-JwS6YRdqfRtNWAG4jlzzXuEtsWKqCTeUt9cp1PVVOFyKVqOwG0tbPcjuEimCP3Z47XmFhe2TVll78BDY7AuRN-sWLRXAoSmOuTUY5I59Zqu_5PzqA_l2xDc8NtOlQDJXhFX1L1_WNYQMbNes8P4oS8_KDs_r5A_yxpjA8wPunfCOkJIsQ6QcWuvO7TB6pYfs_PeoxpSm2wMvKW2sRsmNqSHQ2oVKbLXp1Z4r2Wny0-CqkG7dTtBBhX9GRY79x67V9aoX_yH_gu2J0ujN6uPsrESSLDuBlOPpWGSn_OTES8fGhkLqalWmLAMQfE-oCphzmJ-4ktYwmpvOz4zczDBsbFZdGf6ARH3ahrvCbeiTM2SG_b4WBZBiNJ7kOSBoScRhIXaZT0ElfI6YhjyPn85P1qlVyxgzbmSKQWvYCVmZehGXHIA1Up4R9O39o7nsMhQjku3PMlTwfyQJ_x5OxeRs0ktmfrfm8Pzn0fMW3SMLUcDJPrmMT52mr5mscDBJVv0VBH_51o_bXTOFSjeVIvFXIk44mQ";
 
@@ -291,18 +291,18 @@ class DocResourceSicurezzaTest {
     void testAddDeletePersonAdminOk() {
         // per assicurare l'integrità del test, prima inserisco un utente e poi lo cancello
         String addPierreCurie = "{\"firstName\": \"PIERRE\",\"lastName\": \"CURIE\",\"title\": \"Fisico\",\"minRole\": \"guest\"}";
-        Integer id = given()
+        String uuid = given()
                 .when()
                 .body(addPierreCurie).contentType(ContentType.JSON).accept(ContentType.JSON)
                 .post("/doc/person/add")
                 .then()
                 .statusCode(Response.Status.CREATED.getStatusCode())
                 .extract()
-                .path("id");
-        log.info("testAddDeletePersonAdminOk added pierre curie id : {}", id);
+                .path("uuid");
+        log.info("testAddDeletePersonAdminOk added pierre curie uuid : {}", uuid);
         given()
                 .when()
-                .delete("/doc/person/delete/%s".formatted(id))
+                .delete("/doc/person/delete/%s".formatted(uuid))
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
     }
